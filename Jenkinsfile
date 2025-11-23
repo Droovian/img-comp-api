@@ -31,18 +31,23 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            steps {
-                sh '''
-                ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@43.205.138.111 \
-                "docker pull droovian/img-comp-api &&
-                 docker stop $(docker ps -q) || true &&
-                 docker run -d -p 3000:3000 \
-                 -e AWS_ACCESS_KEY=$AWS_ACCESS_KEY \
-                 -e AWS_SECRET_KEY=$AWS_SECRET_KEY \
-                 -e S3_BUCKET=$S3_BUCKET \
-                 droovian/img-comp-api"
-                '''
-            }
+        steps {
+            sh '''
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@43.205.138.111 "
+                docker pull droovian/img-comp-api:latest &&
+
+                docker stop img-comp-api || true &&
+                docker rm img-comp-api || true &&
+
+                docker run -d --name img-comp-api -p 3000:3000 \
+                    -e AWS_ACCESS_KEY=$AWS_ACCESS_KEY \
+                    -e AWS_SECRET_KEY=$AWS_SECRET_KEY \
+                    -e S3_BUCKET=$S3_BUCKET \
+                    droovian/img-comp-api:latest
+            "
+            '''
         }
+    }
+
     }
 }
